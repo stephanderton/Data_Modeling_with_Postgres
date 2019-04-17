@@ -36,7 +36,7 @@ song_table_create = ("""CREATE TABLE IF NOT EXISTS songs (  \
         title VARCHAR NOT NULL,  \
         artist_id VARCHAR  NOT NULL,  \
         year INT,  \
-        duration REAL  \
+        duration DECIMAL  \
     );  \
 """)
 
@@ -64,13 +64,14 @@ time_table_create = ("""CREATE TABLE IF NOT EXISTS time (  \
 # INSERT RECORDS
 
 songplay_table_insert = ("""INSERT INTO songplays (  \
-        songplay_id, start_time, user_id, level, song_id, artist_id,  \
+        start_time, user_id, level, song_id, artist_id,  \
         session_id, location, user_agent  \
     )  \
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)  \
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)  \
     ON CONFLICT (ts, user_id)  \
     DO UPDATE  \
         SET ts = EXCLUDED.ts, user_id = EXCLUDED.user_id  \
+        
 """)
 
 user_table_insert = ("""INSERT INTO users (  \
