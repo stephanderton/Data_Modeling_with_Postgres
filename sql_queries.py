@@ -14,11 +14,12 @@ songplay_table_create = ("""CREATE TABLE IF NOT EXISTS songplays (  \
         start_time BIGINT NOT NULL,  \
         user_id INT NOT NULL,  \
         level VARCHAR NOT NULL,  \
-        song_id VARCHAR NOT NULL,  \
-        artist_id VARCHAR NOT NULL,  \
+        song_id VARCHAR,  \
+        artist_id VARCHAR,  \
         session_id INT,  \
         location VARCHAR,  \
-        user_agent VARCHAR  \
+        user_agent VARCHAR,  \
+        UNIQUE (start_time, user_id)  \
     );  \
 """)
 
@@ -68,10 +69,16 @@ songplay_table_insert = ("""INSERT INTO songplays (  \
         session_id, location, user_agent  \
     )  \
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)  \
-    ON CONFLICT (ts, user_id)  \
-    DO UPDATE  \
-        SET ts = EXCLUDED.ts, user_id = EXCLUDED.user_id  \
-        
+    ON CONFLICT (start_time, user_id)  \
+    DO UPDATE SET  \
+        start_time = EXCLUDED.start_time,  \
+        user_id = EXCLUDED.user_id,  \
+        level = EXCLUDED.level,  \
+        song_id = EXCLUDED.song_id,  \
+        artist_id = EXCLUDED.artist_id,  \
+        session_id = EXCLUDED.session_id,  \
+        location = EXCLUDED.location,  \
+        user_agent = EXCLUDED.user_agent  \
 """)
 
 user_table_insert = ("""INSERT INTO users (  \
@@ -79,8 +86,12 @@ user_table_insert = ("""INSERT INTO users (  \
     )  \
     VALUES (%s, %s, %s, %s, %s)  \
     ON CONFLICT (user_id)  \
-    DO UPDATE  \
-        SET user_id = EXCLUDED.user_id  \
+    DO UPDATE SET  \
+        user_id = EXCLUDED.user_id,  \
+        first_name = EXCLUDED.first_name,  \
+        last_name = EXCLUDED.last_name,  \
+        gender = EXCLUDED.gender,  \
+        level = EXCLUDED.level  \
 """)
 
 song_table_insert = ("""INSERT INTO songs (  \
@@ -88,8 +99,12 @@ song_table_insert = ("""INSERT INTO songs (  \
     )  \
     VALUES (%s, %s, %s, %s, %s)  \
     ON CONFLICT (song_id)  \
-    DO UPDATE  \
-        SET song_id = EXCLUDED.song_id  \
+    DO UPDATE SET  \
+        song_id = EXCLUDED.song_id,  \
+        title = EXCLUDED.title,  \
+        artist_id = EXCLUDED.artist_id,  \
+        year = EXCLUDED.year,  \
+        duration = EXCLUDED.duration  \
 """)
 
 artist_table_insert = ("""INSERT INTO artists (  \
@@ -97,8 +112,12 @@ artist_table_insert = ("""INSERT INTO artists (  \
     )  \
     VALUES (%s, %s, %s, %s, %s)  \
     ON CONFLICT (artist_id)  \
-    DO UPDATE  \
-        SET artist_id = EXCLUDED.artist_id  \
+    DO UPDATE SET  \
+        artist_id = EXCLUDED.artist_id,  \
+        name = EXCLUDED.name,  \
+        location = EXCLUDED.location,  \
+        latitude = EXCLUDED.latitude,  \
+        longitude = EXCLUDED.longitude  \
 """)
 
 time_table_insert = ("""INSERT INTO time (  \
@@ -106,8 +125,14 @@ time_table_insert = ("""INSERT INTO time (  \
     )  \
     VALUES (%s, %s, %s, %s, %s, %s, %s)  \
     ON CONFLICT (start_time)  \
-    DO UPDATE  \
-        SET start_time = EXCLUDED.start_time  \
+    DO UPDATE SET  \
+        start_time = EXCLUDED.start_time,  \
+        hour = EXCLUDED.hour,  \
+        day = EXCLUDED.day,  \
+        week = EXCLUDED.week,  \
+        month = EXCLUDED.month,  \
+        year = EXCLUDED.year,  \
+        weekday = EXCLUDED.weekday  \
 """)
 
 
