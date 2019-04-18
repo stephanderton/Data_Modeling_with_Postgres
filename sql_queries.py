@@ -1,10 +1,10 @@
 # DROP TABLES
 
 songplay_table_drop = "DROP TABLE IF EXISTS songplays"
-user_table_drop = "DROP TABLE IF EXISTS users"
-song_table_drop = "DROP TABLE IF EXISTS songs"
-artist_table_drop = "DROP TABLE IF EXISTS artists"
-time_table_drop = "DROP TABLE IF EXISTS time"
+user_table_drop     = "DROP TABLE IF EXISTS users"
+song_table_drop     = "DROP TABLE IF EXISTS songs"
+artist_table_drop   = "DROP TABLE IF EXISTS artists"
+time_table_drop     = "DROP TABLE IF EXISTS time"
 
 
 # CREATE TABLES
@@ -71,8 +71,6 @@ songplay_table_insert = ("""INSERT INTO songplays (  \
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)  \
     ON CONFLICT (start_time, user_id)  \
     DO UPDATE SET  \
-        start_time = EXCLUDED.start_time,  \
-        user_id = EXCLUDED.user_id,  \
         level = EXCLUDED.level,  \
         song_id = EXCLUDED.song_id,  \
         artist_id = EXCLUDED.artist_id,  \
@@ -87,7 +85,6 @@ user_table_insert = ("""INSERT INTO users (  \
     VALUES (%s, %s, %s, %s, %s)  \
     ON CONFLICT (user_id)  \
     DO UPDATE SET  \
-        user_id = EXCLUDED.user_id,  \
         first_name = EXCLUDED.first_name,  \
         last_name = EXCLUDED.last_name,  \
         gender = EXCLUDED.gender,  \
@@ -100,7 +97,6 @@ song_table_insert = ("""INSERT INTO songs (  \
     VALUES (%s, %s, %s, %s, %s)  \
     ON CONFLICT (song_id)  \
     DO UPDATE SET  \
-        song_id = EXCLUDED.song_id,  \
         title = EXCLUDED.title,  \
         artist_id = EXCLUDED.artist_id,  \
         year = EXCLUDED.year,  \
@@ -113,7 +109,6 @@ artist_table_insert = ("""INSERT INTO artists (  \
     VALUES (%s, %s, %s, %s, %s)  \
     ON CONFLICT (artist_id)  \
     DO UPDATE SET  \
-        artist_id = EXCLUDED.artist_id,  \
         name = EXCLUDED.name,  \
         location = EXCLUDED.location,  \
         latitude = EXCLUDED.latitude,  \
@@ -125,14 +120,7 @@ time_table_insert = ("""INSERT INTO time (  \
     )  \
     VALUES (%s, %s, %s, %s, %s, %s, %s)  \
     ON CONFLICT (start_time)  \
-    DO UPDATE SET  \
-        start_time = EXCLUDED.start_time,  \
-        hour = EXCLUDED.hour,  \
-        day = EXCLUDED.day,  \
-        week = EXCLUDED.week,  \
-        month = EXCLUDED.month,  \
-        year = EXCLUDED.year,  \
-        weekday = EXCLUDED.weekday  \
+    DO NOTHING  \
 """)
 
 
