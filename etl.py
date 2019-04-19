@@ -2,22 +2,27 @@ import os
 import glob
 import psycopg2
 import pandas as pd
-import json
 from sql_queries import *
 
 
 def process_song_file(cur, filepath):
     """
+    Process a single song data file; upload to Postgres database.
+
+    Extract song data and execute SQL query to insert into *songs* table.
+    Extract artist data, execute SQL query to insert into the *artists* table.
+
+    Parameters:
+        cur (cursor object) : for executing PostgreSQL command in a db session
+        filepath (string) : path to a single song data file
+
+    Returns:
+        none
 
     """
 
     # open song file
     df = pd.read_json(filepath, lines=True)
-
-    # substitute apostrophe with escaped char to avoid failure on INSERT
-    df['artist_location'] = df['artist_location'].str.replace("'", "\'")
-    df['artist_name'] = df['artist_name'].str.replace("'", "\'")
-    df['title'] = df['title'].str.replace("'", "\'")
 
     # insert song record
     song_data = df[['song_id', 'title', 'artist_id', 'year', 
@@ -33,6 +38,22 @@ def process_song_file(cur, filepath):
 
 def process_log_file(cur, filepath):
     """
+    Process a single log file with song play event data and upload to 
+    the Postgres database.
+
+    Extract start timestamp and transform to human readable form. Execute SQL 
+    query to insert start time, with split date/time fields, into *time* table.
+    Extract user data and execute SQL query to insert into the *users* table.
+    For each record, extract song and artist data to use for retrieving 
+    song ID and artist ID from the *songs* and *artists* tables. Insert data
+    for song play record into *songplays* table.
+
+    Parameters:
+        cur (cursor object) : for executing PostgreSQL command in a db session
+        filepath (string) : path to a single log data file
+
+    Returns:
+        none
 
     """
 
@@ -42,19 +63,12 @@ def process_log_file(cur, filepath):
     # filter by NextSong action
     df = df[df.page == 'NextSong']
 
-    # substitute apostrophe with escaped char to avoid failure on INSERT
-    df['artist'] = df['artist'].str.replace("'", "\'")
-    df['firstName'] = df['firstName'].str.replace("'", "\'")
-    df['lastName'] = df['lastName'].str.replace("'", "\'")
-    df['location'] = df['location'].str.replace("'", "\'")
-    df['song'] = df['song'].str.replace("'", "\'")
-    df['userAgent'] = df['userAgent'].str.replace("'", "\'")
-
     # convert timestamp column to datetime
     t = pd.to_datetime(df['ts'], unit='ms')
+    df['ts'] = t
     
     # insert time data records
-    time_data = [df.ts, t.dt.hour, t.dt.day, t.dt.week, t.dt.month, 
+    time_data = [t, t.dt.hour, t.dt.day, t.dt.week, t.dt.month, 
                  t.dt.year, t.dt.weekday]
     column_labels = ('start_time', 'hour', 'day', 'week', 'month', 
                      'year', 'weekday')
@@ -72,10 +86,15 @@ def process_log_file(cur, filepath):
 
     # insert songplay records
     for index, row in df.iterrows():
-        
+
         # get songid and artistid from song and artist tables
-        results = cur.execute(song_select, (row.song, row.artist, row.length))
-        songid, artistid = results if results else None, None
+        cur.execute(song_select, (row.song, row.artist, row.length))
+        results = cur.fetchone()
+
+        if results:
+            songid, artistid = results
+        else:
+            songid, artistid = None, None
 
         # insert songplay record
         songplay_data = (row.ts, row.userId, row.level, songid, artistid,
@@ -85,13 +104,24 @@ def process_log_file(cur, filepath):
 
 def process_data(cur, conn, filepath, func):
     """
+    Process all files within filepath directory through the input function.
+    
+    Get a list of all JSON files within the filepath directory. Pass the 
+    data file to the input function (func) for processing.
 
+    Parameters:
+        cur (cursor object) : for executing PostgreSQL command in a db session
+        filepath (string) : path to a single log data file
+
+    Returns:
+        none
+            
     """
 
     # get all files matching extension from directory
     all_files = []
     for root, dirs, files in os.walk(filepath):
-        files = glob.glob(os.path.join(root,'*.json'))
+        files = glob.glob(os.path.join(root, '*.json'))
         for f in files :
             all_files.append(os.path.abspath(f))
 
@@ -108,7 +138,11 @@ def process_data(cur, conn, filepath, func):
 
 def main():
     """
-
+    Build ETL Pipeline for Sparkify song play data.
+    
+    Instantiate a session to the Postgres database, and 
+    acquire a cursor object to process SQL queries.
+    
     """
 
     try:
